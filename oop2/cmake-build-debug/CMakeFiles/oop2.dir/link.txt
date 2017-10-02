@@ -1,1 +1,0 @@
-/usr/bin/c++  -g   CMakeFiles/oop2.dir/main.cpp.o CMakeFiles/oop2.dir/StatisticMultiset.cpp.o  -o oop2 

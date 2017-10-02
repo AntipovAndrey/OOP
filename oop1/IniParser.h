@@ -29,4 +29,14 @@ public:
 private:
     std::map<std::string, std::map<std::string, std::string>> parsedData;
     bool isInitialised = false;
+
+    std::string deleteComments(std::string &line) const;
+
+    bool lineIsEmpty(std::string &line) const;
+
+    bool lineIsSection(std::string &line) const ;
+
+    std::string extractSection(std::string &line) const;
+
+    std::pair<std::string, std::string> extractParameter(std::string &line) const;
 };

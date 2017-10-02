@@ -15,24 +15,32 @@ void IniParser::initialize(string const &fileName) throw(IOException) {
     string currentSection;
     string currentLine;
     while (!file.eof() && getline(file, currentLine)) {
-        size_t semicolon = currentLine.find(';');
-        if (semicolon != string::npos) {
-            currentLine = currentLine.substr(0, semicolon);
-        }
-        if (currentLine.length() < 4) {
+        currentLine = deleteComments(currentLine);
+        if (lineIsEmpty(currentLine)) {
             continue;
         }
-        if (currentLine.find('[') != string::npos) {
-            currentSection = currentLine.substr(currentLine.find('[') + 1, currentLine.find(']') - 1);
+        if (lineIsSection(currentLine)) {
+            currentSection = extractSection(currentLine);
             continue;
         }
-        currentLine.erase(remove(currentLine.begin(), currentLine.end(), ' '), currentLine.end());
-        string param = currentLine.substr(0, currentLine.find('='));
-        string value = currentLine.substr(currentLine.find('=') + 1);
-        parsedData[currentSection][param] = value;
+        pair<string, string> parameter = extractParameter(currentLine);
+        parsedData[currentSection][parameter.first] = parameter.second;
     }
     file.close();
     isInitialised = true;
+}
+
+string IniParser::deleteComments(string &line) const {
+    size_t semicolon = line.find(';');
+    if (semicolon != string::npos) {
+        return line.substr(0, semicolon);
+    }
+    return line;
+}
+
+bool IniParser::lineIsEmpty(string &line) const {
+    short minLineLength = 3;
+    return line.length() <= minLineLength;
 }
 
 bool IniParser::isHaveSection(string const &sectionName) const throw(ConfigNotInitialisedException) {
@@ -50,30 +58,38 @@ bool IniParser::isHaveParameter(string const &sectionName,
 template<>
 std::string IniParser::getValue<string>(string const &sectionName,
                                         string const &parameterName) throw(IniException) {
-    if (isHaveSection(sectionName) && isHaveParameter(sectionName, parameterName)) {
-        return parsedData.at(sectionName).at(parameterName);
+    if (!isHaveSection(sectionName)) {
+        throw SectionNotFoundException(sectionName);
     }
-    throw NoSuchParameterException(parameterName);
+    if (!isHaveParameter(sectionName, parameterName)) {
+        throw NoSuchParameterException(parameterName);
+    }
+    return parsedData.at(sectionName).at(parameterName);
 }
 
 
 template<>
 int IniParser::getValue<int>(string const &sectionName,
                              string const &parameterName) throw(IniException) {
-    if (isHaveSection(sectionName) && isHaveParameter(sectionName, parameterName)) {
-
-        return stoi(parsedData.at(sectionName).at(parameterName));
+    if (!isHaveSection(sectionName)) {
+        throw SectionNotFoundException(sectionName);
     }
-    throw NoSuchParameterException(parameterName);
+    if (!isHaveParameter(sectionName, parameterName)) {
+        throw NoSuchParameterException(parameterName);
+    }
+    return stoi(parsedData.at(sectionName).at(parameterName));
 }
 
 template<>
 double IniParser::getValue<double>(string const &sectionName,
                                    string const &parameterName) throw(IniException) {
-    if (isHaveSection(sectionName) && isHaveParameter(sectionName, parameterName)) {
-        return stod(parsedData.at(sectionName).at(parameterName));
+    if (!isHaveSection(sectionName)) {
+        throw SectionNotFoundException(sectionName);
     }
-    throw NoSuchParameterException(parameterName);
+    if (!isHaveParameter(sectionName, parameterName)) {
+        throw NoSuchParameterException(parameterName);
+    }
+    return stod(parsedData.at(sectionName).at(parameterName));
 }
 
 const string IniParser::toString() const {
@@ -86,4 +102,19 @@ const string IniParser::toString() const {
         }
     }
     return toReturn;
+}
+
+bool IniParser::lineIsSection(string &line) const{
+    return line.find('[') != string::npos;
+}
+
+string IniParser::extractSection(string &line) const{
+    return line.substr(line.find('[') + 1, line.find(']') - 1);
+}
+
+pair<string, string> IniParser::extractParameter(string &line) const{
+    line.erase(remove(line.begin(), line.end(), ' '), line.end());
+    string param = line.substr(0, line.find('='));
+    string value = line.substr(line.find('=') + 1);
+    return make_pair<string &, string &>(param, value);
 }
