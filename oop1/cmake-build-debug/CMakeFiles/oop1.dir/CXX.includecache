@@ -1,0 +1,38 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/andrey/CLionProjects/oop/oop1/IniException.h
+exception
+-
+stdexcept
+-
+
+/home/andrey/CLionProjects/oop/oop1/IniParser.cpp
+iostream
+-
+algorithm
+-
+IniParser.h
+/home/andrey/CLionProjects/oop/oop1/IniParser.h
+
+/home/andrey/CLionProjects/oop/oop1/IniParser.h
+fstream
+-
+map
+-
+string
+-
+IniException.h
+/home/andrey/CLionProjects/oop/oop1/IniException.h
+
+/home/andrey/CLionProjects/oop/oop1/main.cpp
+iostream
+-
+IniParser.h
+/home/andrey/CLionProjects/oop/oop1/IniParser.h
+
