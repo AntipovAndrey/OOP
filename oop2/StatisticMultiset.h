@@ -26,7 +26,7 @@ public:
             if (value < minValue) minValue = value;
         }
 
-        updateCaches(value);
+        updateCachesAfterAdd(value);
 
         data.insert(value);
         avgIsOutdated = true;
@@ -143,7 +143,7 @@ private:
         }
     }
 
-    void updateCaches(const T &value) {
+    void updateCachesAfterAdd(const T &value) {
         for (auto &it : cacheUnder) {
             if (it.first > value && cacheUnder.count(it.first)) {
                 cacheUnder[it.first] = cacheUnder[it.first] + 1;

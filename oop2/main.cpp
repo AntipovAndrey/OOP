@@ -2,6 +2,7 @@
 #include "StatisticMultiset.h"
 
 using namespace std;
+
 int main() {
     StatisticMultiset<float> statisticMultiset;
 
