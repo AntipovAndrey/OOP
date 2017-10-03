@@ -21,7 +21,7 @@ public:
     throw(ConfigNotInitialisedException, SectionNotFoundException);
 
     template<typename T>
-    T getValue(std::string const &sectionName, std::string const &parameterName)
+    T getValue(std::string const &sectionName, std::string const &parameterName) const
     throw(IniException);
 
     const std::string toString() const;

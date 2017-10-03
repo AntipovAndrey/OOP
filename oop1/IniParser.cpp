@@ -57,7 +57,7 @@ bool IniParser::isHaveParameter(string const &sectionName,
 
 template<>
 std::string IniParser::getValue<string>(string const &sectionName,
-                                        string const &parameterName) throw(IniException) {
+                                        string const &parameterName) const throw(IniException) {
     if (!isHaveSection(sectionName)) {
         throw SectionNotFoundException(sectionName);
     }
@@ -70,7 +70,7 @@ std::string IniParser::getValue<string>(string const &sectionName,
 
 template<>
 int IniParser::getValue<int>(string const &sectionName,
-                             string const &parameterName) throw(IniException) {
+                             string const &parameterName) const throw(IniException) {
     if (!isHaveSection(sectionName)) {
         throw SectionNotFoundException(sectionName);
     }
@@ -82,7 +82,7 @@ int IniParser::getValue<int>(string const &sectionName,
 
 template<>
 double IniParser::getValue<double>(string const &sectionName,
-                                   string const &parameterName) throw(IniException) {
+                                   string const &parameterName) const throw(IniException) {
     if (!isHaveSection(sectionName)) {
         throw SectionNotFoundException(sectionName);
     }
@@ -104,15 +104,15 @@ const string IniParser::toString() const {
     return toReturn;
 }
 
-bool IniParser::lineIsSection(string &line) const{
+bool IniParser::lineIsSection(string &line) const {
     return line.find('[') != string::npos;
 }
 
-string IniParser::extractSection(string &line) const{
+string IniParser::extractSection(string &line) const {
     return line.substr(line.find('[') + 1, line.find(']') - 1);
 }
 
-pair<string, string> IniParser::extractParameter(string &line) const{
+pair<string, string> IniParser::extractParameter(string &line) const {
     line.erase(remove(line.begin(), line.end(), ' '), line.end());
     string param = line.substr(0, line.find('='));
     string value = line.substr(line.find('=') + 1);

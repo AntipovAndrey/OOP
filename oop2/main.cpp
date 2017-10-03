@@ -20,7 +20,7 @@ int main() {
     cout << statisticMultiset.getCountUnder(0.5) << endl;
     cout << statisticMultiset.getCountUnder(0.4) << endl;
     cout << statisticMultiset.getCountUnder(0.5) << endl;
-
+    statisticMultiset.addNums(statisticMultiset);
     cout << statisticMultiset.getCountAbove(10) << endl;
 
     statisticMultiset.addNumsFromFile("numset");

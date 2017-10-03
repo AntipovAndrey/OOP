@@ -51,7 +51,9 @@ public:
     }
 
     void addNums(const StatisticMultiset &startSet) {
-        addNum(startSet.data);
+        if (this != &startSet) {
+            addNum(startSet.data);
+        }
     }
 
     void addNumsFromFile(const char *fileName) {
