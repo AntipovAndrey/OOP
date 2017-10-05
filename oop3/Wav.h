@@ -29,7 +29,7 @@ public:
 
     void cutFirstSeconds(float seconds);
 
-    bool isStereo() {
+    bool isStereo() const {
         return channelsData.size() > 1;
     }
 
@@ -86,11 +86,11 @@ private:
 
     const static short HEADER_SIZE = 44;
 
-    unsigned int getChannelsCount() {
+    unsigned int getChannelsCount() const {
         return static_cast<unsigned int>(channelsData.size());
     }
 
-    unsigned int getSamplesCountPerChannel() {
+    unsigned int getSamplesCountPerChannel() const {
         return static_cast<unsigned int>(channelsData[0].size());
     }
 
