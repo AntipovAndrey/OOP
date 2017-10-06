@@ -13,13 +13,13 @@ public:
 
     explicit Wav(const std::string &fileName) throw(WavException);
 
-    void applyReverberation(double delay, float decay) throw(BadParamsException);
+    void applyReverberation(double delay, float decay) throw(BadParamsException, ReverberationException);
 
-    void applyReverberationByChannel(double delay, float decay, int channel) throw(BadParamsException);
+    void applyReverberationByChannel(double delay, float decay, int channel) throw(BadParamsException, ReverberationException);
 
     void makeMono() throw(BadParamsException);
 
-    void makeWavFile(const std::string &filename) throw(WavException);
+    void makeWavFile(const std::string &fileName) throw(WavException);
 
     std::string getDescription() const;
 
@@ -33,7 +33,7 @@ public:
         return channelsData.size() > 1;
     }
 
-    static const int leftChannel = 0, rightChannel = 1;
+    static const int leftChannel = 1, rightChannel = 2;
 
 private:
 
@@ -96,5 +96,8 @@ private:
 
     unsigned int secondsToBytes(float seconds) const;
 
+    bool isMono() {
+        return channelsData.size() == 1;
+    };
 };
 

@@ -174,7 +174,7 @@ void Wav::initHeader() {
     header.bitsPerSample = 16;
 }
 
-void Wav::makeWavFile(const string &filename) throw(WavException) {
+void Wav::makeWavFile(const string &fileName) throw(WavException) {
 
     if (getChannelsCount() < 1) {
         throw BadParamsException(wavFileName);
@@ -200,7 +200,7 @@ void Wav::makeWavFile(const string &filename) throw(WavException) {
         }
     }
 
-    ofstream output(filename, ofstream::binary | ofstream::out);
+    ofstream output(fileName, ofstream::binary | ofstream::out);
 
     output.write((char *) (&header), sizeof(WavHeader));
     output.write((char *) allChannels.data(), allChannels.size() * sizeof(short));
@@ -299,18 +299,25 @@ void Wav::updateHeader() {
                getSamplesCountPerChannel());
 }
 
-void Wav::applyReverberation(double delay, float decay) throw(BadParamsException) {
+void Wav::applyReverberation(double delay, float decay) throw(BadParamsException, ReverberationException) {
     for (int i = 0; i < getChannelsCount(); ++i) {
         applyReverberationByChannel(delay, decay, i);
     }
 }
 
-void Wav::applyReverberationByChannel(double delay, float decay, int channel) throw(BadParamsException) {
+void Wav::applyReverberationByChannel(double delay, float decay, int channel) throw(BadParamsException, ReverberationException) {
 
-    if (getChannelsCount() < channel + 1) {
+    int channelAsIndex = channel - 1;
+
+    if (isMono()) {
+        channelAsIndex = 0;
+    }
+
+    if (channelAsIndex < 0 || channelAsIndex > getChannelsCount()) {
         throw ReverberationException(
                 "bad channel number : " + to_string(channel) + ". There is only " + to_string(getChannelsCount()));
     }
+
 
     // Verify that all channels have the same number of samples.
     for (size_t ch = 0; ch < getChannelsCount(); ch++) {
@@ -322,11 +329,11 @@ void Wav::applyReverberationByChannel(double delay, float decay, int channel) th
     auto delaySamples = static_cast<uint32_t>(delay * header.sampleRate);
 
     vector<float> tmp;
-    tmp.resize(channelsData[channel].size());
+    tmp.resize(channelsData[channelAsIndex].size());
 
     // Convert signal from short to float
     for (size_t i = 0; i < getSamplesCountPerChannel(); i++) {
-        tmp[i] = channelsData[channel][i];
+        tmp[i] = channelsData[channelAsIndex][i];
     }
 
     // Add a reverb
@@ -348,9 +355,8 @@ void Wav::applyReverberationByChannel(double delay, float decay, int channel) th
 
     // Scale back and transform floats to shorts.
     for (size_t i = 0; i < getSamplesCountPerChannel(); i++) {
-        channelsData[channel][i] = (short) (normalCoef * tmp[i]);
+        channelsData[channelAsIndex][i] = (short) (normalCoef * tmp[i]);
     }
 
     updateHeader();
-
 }

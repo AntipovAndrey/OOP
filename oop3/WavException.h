@@ -100,5 +100,5 @@ public:
 
 class ReverberationException : public WavException {
 public:
-    explicit ReverberationException(const std::string &msg) : WavException("Reverberation error : ") {}
+    explicit ReverberationException(const std::string &msg) : WavException("Reverberation error : " + msg) {}
 };
