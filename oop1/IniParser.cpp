@@ -58,12 +58,7 @@ bool IniParser::isHaveParameter(string const &sectionName,
 template<>
 std::string IniParser::getValue<string>(string const &sectionName,
                                         string const &parameterName) const throw(IniException) {
-    if (!isHaveSection(sectionName)) {
-        throw SectionNotFoundException(sectionName);
-    }
-    if (!isHaveParameter(sectionName, parameterName)) {
-        throw NoSuchParameterException(parameterName);
-    }
+    assertExistence(sectionName, parameterName);
     return parsedData.at(sectionName).at(parameterName);
 }
 
@@ -71,24 +66,14 @@ std::string IniParser::getValue<string>(string const &sectionName,
 template<>
 int IniParser::getValue<int>(string const &sectionName,
                              string const &parameterName) const throw(IniException) {
-    if (!isHaveSection(sectionName)) {
-        throw SectionNotFoundException(sectionName);
-    }
-    if (!isHaveParameter(sectionName, parameterName)) {
-        throw NoSuchParameterException(parameterName);
-    }
+    assertExistence(sectionName, parameterName);
     return stoi(parsedData.at(sectionName).at(parameterName));
 }
 
 template<>
 double IniParser::getValue<double>(string const &sectionName,
                                    string const &parameterName) const throw(IniException) {
-    if (!isHaveSection(sectionName)) {
-        throw SectionNotFoundException(sectionName);
-    }
-    if (!isHaveParameter(sectionName, parameterName)) {
-        throw NoSuchParameterException(parameterName);
-    }
+    assertExistence(sectionName, parameterName);
     return stod(parsedData.at(sectionName).at(parameterName));
 }
 
@@ -117,4 +102,14 @@ pair<string, string> IniParser::extractParameter(string &line) const {
     string param = line.substr(0, line.find('='));
     string value = line.substr(line.find('=') + 1);
     return make_pair<string &, string &>(param, value);
+}
+
+void IniParser::assertExistence(const std::string &sectionName,
+                                const std::string &parameterName) const throw(SectionNotFoundException, NoSuchParameterException) {
+    if (!isHaveSection(sectionName)) {
+        throw SectionNotFoundException(sectionName);
+    }
+    if (!isHaveParameter(sectionName, parameterName)) {
+        throw NoSuchParameterException(parameterName);
+    }
 }

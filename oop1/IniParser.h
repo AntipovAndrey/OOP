@@ -34,9 +34,12 @@ private:
 
     bool lineIsEmpty(std::string &line) const;
 
-    bool lineIsSection(std::string &line) const ;
+    bool lineIsSection(std::string &line) const;
 
     std::string extractSection(std::string &line) const;
 
     std::pair<std::string, std::string> extractParameter(std::string &line) const;
+
+    void assertExistence(const std::string &sectionName,
+                         const std::string &parameterName) const throw(SectionNotFoundException, NoSuchParameterException);
 };

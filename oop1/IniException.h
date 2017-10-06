@@ -32,7 +32,6 @@ public:
 
 class SectionNotFoundException : public IniException {
 public:
-
     explicit SectionNotFoundException(const std::string &sectionName) : IniException(
             "Section " + sectionName + " not found"), sectionName(sectionName) {}
 
@@ -46,8 +45,6 @@ private:
 
 class NoSuchParameterException : public IniException {
 public:
-
-
     explicit NoSuchParameterException(const std::string &parameterName) : IniException(
             "Parameter " + parameterName + " not found"), parameterName(parameterName) {}
 
