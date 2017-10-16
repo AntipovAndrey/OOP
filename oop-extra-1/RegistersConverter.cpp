@@ -4,6 +4,9 @@
 
 #include "RegistersConverter.h"
 
+const std::string RegistersConverter::INI_POSTFIX = ".ini";
+const std::string RegistersConverter::HEADER_POSTFIX = ".h";
+
 RegistersConverter::RegistersConverter(const std::string &fileName) : fileName(fileName) {
 
 }

@@ -8,12 +8,13 @@
 
 #include <string>
 #include <vector>
+#include <regex>
 
 class RegistersParser {
 public:
     void process(const std::string &line);
 
-    std::string getNextString() const;
+    std::vector<std::vector<std::string>> getParsedData() const;
 
 private:
 
@@ -23,20 +24,27 @@ private:
 
     class Register {
     public:
-        Register(std::string &name, uint8_t firstAddress, uint8_t secondAddress, uint8_t command)
-                : name(name), firstAddress(firstAddress), secondAddress(secondAddress), command(command) {}
+        explicit Register(const std::string &correctLine);
 
-        std::string toString() const;
+        std::vector<std::string> asStrings() const;
 
     private:
-        std::string &name;
         uint8_t firstAddress;
         uint8_t secondAddress;
         uint8_t command;
     };
 
+    static const std::regex registerPattern;
+    static const std::regex registerNamePattern;
+    static const std::regex registerDataPattern;
+
+    mutable bool firstPush = true, lastPush = false;
+
     std::vector<Register> repository;
-    std::vector<Register>::iterator nextRegister;
+
+    void fillWithPreamble();
+
+    void fillWithPostamble();
 };
 
 

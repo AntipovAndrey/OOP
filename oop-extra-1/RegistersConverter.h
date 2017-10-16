@@ -46,8 +46,8 @@ private:
     void parseFile();
 
     const std::string &fileName;
-    static const std::string INI_POSTFIX = ".ini";
-    static const std::string HEADER_POSTFIX = ".h";
+    static const std::string INI_POSTFIX;
+    static const std::string HEADER_POSTFIX;
     RegistersParser parser;
 };
 
