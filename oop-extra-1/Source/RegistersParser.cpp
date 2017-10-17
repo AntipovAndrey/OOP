@@ -4,7 +4,7 @@
 
 #include <sstream>
 #include <iostream>
-#include "RegistersParser.h"
+#include "../Headers/RegistersParser.h"
 
 const std::regex RegistersParser::registerPattern = std::regex("R[0-9]+.*0x[0-9A-Fa-f]{6}");
 const std::regex RegistersParser::registerNamePattern = std::regex("R[0-9]+");
@@ -52,7 +52,6 @@ bool RegistersParser::isPostamble(const std::string &line) const {
 std::vector<std::vector<std::string>> RegistersParser::getParsedData() const {
     std::vector<std::vector<std::string>> allData;
     std::for_each(repository.begin(), repository.end(), [&](Register reg) { allData.emplace_back(reg.asStrings()); });
-
     return allData;
 }
 

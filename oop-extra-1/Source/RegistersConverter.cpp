@@ -3,16 +3,15 @@
 //
 
 #include <fstream>
-#include "RegistersConverter.h"
+#include <iostream>
+#include "../Headers/RegistersConverter.h"
 
 const std::string RegistersConverter::INI_POSTFIX = ".ini";
 const std::string RegistersConverter::HEADER_POSTFIX = ".h";
 
-RegistersConverter::RegistersConverter(const std::string &fileName) : fileName(fileName) {
-    parseFile();
-}
+RegistersConverter::RegistersConverter(const std::string &fileName) : fileName(fileName) {}
 
-void RegistersConverter::saveAsIni(const std::string &iniFileName) const {
+bool RegistersConverter::saveAsIni(const std::string &iniFileName) const {
     std::ofstream iniFile(iniFileName);
     std::for_each(parsedData.begin(), parsedData.end(), [&](std::vector<std::string> inner) {
         std::for_each(inner.begin(), inner.end(), [&](std::string value) {
@@ -20,13 +19,18 @@ void RegistersConverter::saveAsIni(const std::string &iniFileName) const {
         });
         iniFile << std::endl;
     });
+    if (iniFile.fail()) {
+        std::cerr << "Can not write file: " << iniFileName << std::endl;
+        return false;
+    }
+    return true;
 }
 
-void RegistersConverter::saveAsIni() const {
-    saveAsIni(fileName + INI_POSTFIX);
+bool RegistersConverter::saveAsIni() const {
+    return saveAsIni(fileName + INI_POSTFIX);
 }
 
-void RegistersConverter::saveAsHeader(const std::string &headerFileName) const {
+bool RegistersConverter::saveAsHeader(const std::string &headerFileName) const {
     std::ofstream headerFile(headerFileName);
     std::string includeGuardName(headerFileName);
     std::for_each(includeGuardName.begin(), includeGuardName.end(), [&](char &c) {
@@ -49,19 +53,28 @@ void RegistersConverter::saveAsHeader(const std::string &headerFileName) const {
 
     headerFile << "};" << std::endl;
     headerFile << "#endif //" << includeGuardName << std::endl;
+    if (headerFile.fail()) {
+        std::cerr << "Can not write file: " << headerFileName << std::endl;
+        return false;
+    }
+    return true;
 }
 
-void RegistersConverter::saveAsHeader() const {
-    saveAsHeader(fileName + HEADER_POSTFIX);
+bool RegistersConverter::saveAsHeader() const {
+    return saveAsHeader(fileName + HEADER_POSTFIX);
 }
 
-void RegistersConverter::parseFile() {
+bool RegistersConverter::parseFile() {
     std::fstream file;
     file.open(fileName);
-    //   if (!file.good()) throw IOException(fileName);
+    if (!file.good()) {
+        std::cerr << "Can not read file: " << fileName << std::endl;
+        return false;
+    }
     std::string currentLine;
     while (!file.eof() && std::getline(file, currentLine)) {
         parser.process(currentLine);
     }
     parsedData = parser.getParsedData();
+    return true;
 }

@@ -33,16 +33,17 @@ class RegistersConverter {
 public:
     explicit RegistersConverter(const std::string &fileName);
 
-    void saveAsIni(const std::string &iniFileName) const;
+    bool parseFile();
 
-    void saveAsIni() const;
+    bool saveAsIni(const std::string &iniFileName) const;
 
-    void saveAsHeader(const std::string &headerFileName) const;
+    bool saveAsIni() const;
 
-    void saveAsHeader() const;
+    bool saveAsHeader(const std::string &headerFileName) const;
+
+    bool saveAsHeader() const;
 
 private:
-    void parseFile();
 
     const std::string &fileName;
     static const std::string INI_POSTFIX;

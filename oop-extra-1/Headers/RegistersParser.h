@@ -10,8 +10,6 @@
 #include <vector>
 #include <regex>
 
-// TODO exceptions
-
 class RegistersParser {
 public:
     void process(const std::string &line);
