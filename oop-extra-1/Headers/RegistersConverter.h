@@ -45,7 +45,7 @@ public:
 
 private:
 
-    const std::string &fileName;
+    const std::string fileName;
     static const std::string INI_POSTFIX;
     static const std::string HEADER_POSTFIX;
     RegistersParser parser;
