@@ -42,13 +42,13 @@ public:
     void saveAsHeader() const;
 
 private:
-
     void parseFile();
 
     const std::string &fileName;
     static const std::string INI_POSTFIX;
     static const std::string HEADER_POSTFIX;
     RegistersParser parser;
+    std::vector<std::vector<std::string>> parsedData;
 };
 
 

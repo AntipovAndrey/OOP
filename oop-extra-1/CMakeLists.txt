@@ -3,5 +3,5 @@ project(oop_extra_1)
 
 set(CMAKE_CXX_STANDARD 17)
 
-set(SOURCE_FILES main.cpp RegistersConverter.cpp RegistersConverter.h RegistersParser.cpp RegistersParser.h)
+set(SOURCE_FILES main.cpp RegistersConverter.cpp RegistersConverter.h RegistersParser.cpp RegistersParser.h test.h)
 add_executable(oop_extra_1 ${SOURCE_FILES})
