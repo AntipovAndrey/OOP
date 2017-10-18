@@ -50,6 +50,8 @@ private:
     static const std::string HEADER_POSTFIX;
     RegistersParser parser;
     std::vector<std::vector<std::string>> parsedData;
+
+    std::string cutFilenameExtension(const std::string &) const;
 };
 
 

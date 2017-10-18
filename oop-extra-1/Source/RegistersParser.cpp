@@ -30,21 +30,23 @@ void RegistersParser::process(const std::string &line) {
 
 bool RegistersParser::isPreamble(const std::string &line) const {
     std::smatch matched;
+    const int firstPreambleRegNum = 0, lastPreambleRegNum = 13;
     if (std::regex_search(line, matched, registerNamePattern)) {
         int numOfRegister = std::stoi(matched.str().substr(1));
-        return numOfRegister >= 0 && numOfRegister <= 13;
+        return numOfRegister >= firstPreambleRegNum && numOfRegister <= lastPreambleRegNum;
     }
     return false;
 }
 
 bool RegistersParser::isPostamble(const std::string &line) const {
     std::smatch matched;
+    const int firstPostambleRegNum = 8189, lastPostambleRegNum = 8191;
     if (std::regex_search(line, matched, registerNamePattern)) {
         int numOfRegister = std::stoi(matched.str().substr(1));
-        if (numOfRegister == 8191) {
+        if (numOfRegister == lastPostambleRegNum) {
             lastPush = true;
         }
-        return numOfRegister >= 8189 && numOfRegister <= 8191;
+        return numOfRegister >= firstPostambleRegNum && numOfRegister <= lastPostambleRegNum;
     }
     return false;
 }

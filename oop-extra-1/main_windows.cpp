@@ -12,6 +12,7 @@
 int main(int argc, char *argv[]) {
     if (argc != 2) {
         std::cerr << "Incorrect Format" << std::endl;
+        std::cout << "Usage - <program_name> <file_name>" << std::endl;
         exit(4);
     }
     RegistersConverter converter(argv[1]);

@@ -44,6 +44,12 @@ int main(int argc, char *argv[]) {
             fileName = std::string(argv[argc - 1]);
         } else {
             std::cerr << "Too few arguments" << std::endl;
+            std::cout << "Usage:\t\t<executable_name> [parameters]\n"
+                    "Parameters:\n\t\t-f source - set source file name\n"
+                    "\t\t-h file - set file name of output header, default - <sourceName>.h\n"
+                    "\t\t-i file - set file name of output ini file, default - <sourceName>.ini\n"
+                    "\t\tWithout -h and -i arguments you can set source file name without -f : <executable_name> <file>"
+                      << std::endl;
             exit(1);
         }
     }
