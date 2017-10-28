@@ -5,7 +5,7 @@
 #pragma once
 
 #include <cstdint>
-#include <set>
+#include <vector>
 #include <string>
 #include "IntegerFactorizationExceptions.h"
 
@@ -28,7 +28,7 @@ private:
 
     bool calculated = false;
 
-    std::multiset<uint32_t> factorizedData;
+    std::vector<uint32_t> factorizedData;
 
     bool isCalculated() const;
 
