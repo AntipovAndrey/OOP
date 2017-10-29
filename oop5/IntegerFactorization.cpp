@@ -33,7 +33,7 @@ std::string IntegerFactorization::toString() const throw(NotCalculatedException)
 
     assertCalculated();
 
-    std::string toReturn = "{\n\"number\": " + std::to_string(initialNumber) + ",\n\"factors\": [";
+    std::string toReturn = "{\n\t\"number\": " + std::to_string(initialNumber) + ",\n\t\"factors\": [";
 
     std::string factors;
     for (auto num : factorizedData) {

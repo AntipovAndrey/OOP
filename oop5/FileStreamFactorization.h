@@ -10,13 +10,18 @@
 #include <mutex>
 #include <condition_variable>
 #include "IntegerFactorization.h"
+#include "ConcurrentTask.h"
 
 
-class FileStreamFactorization {
+class FileStreamFactorization : ITaskObserver{
 public:
     FileStreamFactorization(const std::string &inputFilename, const std::string &outputFilename);
 
     void process();
+
+    void enableDialog(bool enabled);
+
+    void setThreadsCount(unsigned int count);
 
 private:
     std::ifstream input;
@@ -28,4 +33,12 @@ private:
     void initialiseStreams();
 
     void closeStreams();
+
+    bool dialogEnabled = false;
+
+    void startDialog(ConcurrentTask &task);
+
+    void update(std::string message) override;
+
+    unsigned int threadsNumber = std::thread::hardware_concurrency();
 };

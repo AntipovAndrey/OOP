@@ -8,15 +8,14 @@
 #include "IntegerFactorization.h"
 
 ConcurrentTask::ConcurrentTask(std::ifstream &input, std::ofstream &output, int CONSUMERS_NUM)
-        : input(input), output(output), CONSUMERS_NUM(CONSUMERS_NUM) {
-
-}
+        : input(input), output(output), CONSUMERS_NUM(CONSUMERS_NUM) {}
 
 void ConcurrentTask::producer() {
     uint64_t number = 0;
 
     while (input >> number) {
         std::unique_lock<std::mutex> lock(lockerMutex);
+        condVar.wait(lock, [this]() { return !paused; });
         producedTasks.push(number);
         condVar.notify_all();
     }
@@ -29,24 +28,24 @@ void ConcurrentTask::consumer() {
     while (true) {
         std::unique_lock<std::mutex> lock(lockerMutex);
         condVar.wait(lock, [this]() {
-            return !producedTasks.empty();
+            return !producedTasks.empty() && !paused;
         });
-        lock.unlock();
-        while (!producedTasks.empty()) {
-            lockerMutex.lock();
+        while (!producedTasks.empty() && !paused) {
             uint64_t task = producedTasks.front();
             producedTasks.pop();
-            //       std::cout << std::this_thread::get_id() <<  " begin task " << task << std::endl;
+            // std::cout << std::this_thread::get_id() << " begin task " << task << std::endl;
             lockerMutex.unlock();
-            daTask(task);
-            //      std::cout << std::this_thread::get_id() <<  " END TASK " << task << std::endl;
+            doTask(task);
+            // std::cout << std::this_thread::get_id() << " END TASK " << task << std::endl;
         }
-        if (finished) break;
+        if (!isWorking()) {
+            break;
+        }
     }
 }
 
 
-void ConcurrentTask::daTask(uint64_t task) {
+void ConcurrentTask::doTask(uint64_t task) {
     try {
         IntegerFactorization factorization(task);
         factorization.calculate();
@@ -59,15 +58,64 @@ void ConcurrentTask::daTask(uint64_t task) {
 }
 
 void ConcurrentTask::start() {
-    std::vector<std::thread> pool;
     pool.emplace_back(&ConcurrentTask::producer, this);
     for (int i = 0; i < CONSUMERS_NUM; ++i) {
         pool.emplace_back(&ConcurrentTask::consumer, this);
     }
+}
+
+void ConcurrentTask::join() {
     for (auto &t : pool) {
-        t.join();
+        if (t.joinable()) {
+            t.join();
+        }
     }
 }
 
+void ConcurrentTask::pauseCalculations() {
+    std::lock_guard<std::mutex> lockGuard(lockerMutex);
+    paused = true;
+}
 
+void ConcurrentTask::continueCalculations() {
+    std::lock_guard<std::mutex> lockGuard(lockerMutex);
+    if (paused) {
+        paused = false;
+        condVar.notify_all();
+    }
+}
 
+void ConcurrentTask::terminate() {
+    std::lock_guard<std::mutex> lockGuard(lockerMutex);
+    terminated = true;
+    std::queue<uint64_t> empty;
+    std::swap(producedTasks, empty);
+    finished = true;
+}
+
+bool ConcurrentTask::isWorking() {
+    std::lock_guard<std::mutex> lockGuard(lockerMutex);
+    if (!(finished && producedTasks.empty() || terminated) || paused) {
+        return true;
+    }
+    if (!observersUpdated) {
+        messageForObservers = "Done! Enter anything to continue";
+        notifyObservers();
+        observersUpdated = true;
+    }
+    return false;
+}
+
+void ConcurrentTask::registerObserver(ITaskObserver &o) {
+    observers.push_back(&o);
+}
+
+void ConcurrentTask::removeObserver(ITaskObserver &o) {
+    observers.erase(std::remove(std::begin(observers), std::end(observers), &o), observers.end());
+}
+
+void ConcurrentTask::notifyObservers() {
+    for (auto item : observers) {
+        item->update(messageForObservers);
+    }
+}
