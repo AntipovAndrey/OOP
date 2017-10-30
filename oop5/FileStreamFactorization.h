@@ -11,7 +11,7 @@
 #include <condition_variable>
 #include "IntegerFactorization.h"
 #include "ITaskObserver.h"
-#include "ConcurentTask.h"
+#include "ConcurrentTask.h"
 
 
 class FileStreamFactorization : ITaskObserver {
