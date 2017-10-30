@@ -13,9 +13,9 @@ IntegerFactorization::IntegerFactorization(uint64_t number) throw(IllegalArgumen
 }
 
 void IntegerFactorization::calculate() {
-    uint32_t squareRoot = static_cast<uint32_t> (floorl(sqrtl(initialNumber)));
+    auto squareRoot = static_cast<uint64_t>(floorl(sqrtl(initialNumber)));
     uint64_t number = initialNumber;
-    for (uint32_t i = 2; i <= squareRoot; i++) {
+    for (uint64_t i = 2; i <= squareRoot; i++) {
         while (number % i == 0) {
             factorizedData.push_back(i);
             number /= i;
@@ -23,7 +23,7 @@ void IntegerFactorization::calculate() {
     }
 
     if (number != 1) {
-        factorizedData.push_back(static_cast<int32_t>(number));
+        factorizedData.push_back(number);
     }
 
     calculated = true;

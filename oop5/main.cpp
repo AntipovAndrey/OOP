@@ -3,6 +3,8 @@
 #include "FileStreamFactorization.h"
 
 int main() {
+
+
     FileStreamFactorization factorization("test.txt", "out.txt");
 
     std::cout

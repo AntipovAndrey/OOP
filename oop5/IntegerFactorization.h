@@ -28,7 +28,7 @@ private:
 
     bool calculated = false;
 
-    std::vector<uint32_t> factorizedData;
+    std::vector<uint64_t> factorizedData;
 
     bool isCalculated() const;
 
