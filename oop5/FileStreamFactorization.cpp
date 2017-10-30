@@ -12,7 +12,17 @@ FileStreamFactorization::FileStreamFactorization(const std::string &inputFilenam
 void FileStreamFactorization::process() {
     initialiseStreams();
 
-    ConcurrentTask task(input, output, threadsNumber);
+    ConcurrentTask<uint64_t, std::string> task(input, output, threadsNumber, [](uint64_t number) {
+        try {
+            IntegerFactorization factorization(number);
+            factorization.calculate();
+            return factorization.toString();
+        } catch (IntegerFactorizationException &exception) {
+            std::cerr << exception.what() << std::endl;
+            return std::string("");
+        }
+    });
+
     task.registerObserver(*this);
     task.start();
 
@@ -39,7 +49,7 @@ void FileStreamFactorization::enableDialog(bool enabled) {
     dialogEnabled = enabled;
 }
 
-void FileStreamFactorization::startDialog(ConcurrentTask &task) {
+void FileStreamFactorization::startDialog(ConcurrentTask<uint64_t, std::string> &task) {
     std::string answer;
     while (task.isWorking()) {
         std::cin >> answer;
@@ -59,7 +69,7 @@ void FileStreamFactorization::startDialog(ConcurrentTask &task) {
 }
 
 void FileStreamFactorization::setThreadsCount(unsigned int count) {
-    if (count > 1 && count < 9) {
+    if (count >= 1 && count <= 8) {
         threadsNumber = count;
     }
 }
