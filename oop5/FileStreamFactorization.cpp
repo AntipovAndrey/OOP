@@ -12,7 +12,7 @@ FileStreamFactorization::FileStreamFactorization(const std::string &inputFilenam
 void FileStreamFactorization::process() {
     initialiseStreams();
 
-    ConcurrentTask<uint64_t, std::string> task(input, output, threadsNumber, [](uint64_t number) {
+    ConcurrentTask<uint64_t, std::string> task(input, output, threadsNumber, [](uint64_t number) -> std::string {
         try {
             IntegerFactorization factorization(number);
             factorization.calculate();

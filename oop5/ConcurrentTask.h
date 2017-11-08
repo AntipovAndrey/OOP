@@ -10,8 +10,6 @@
 #include <thread>
 #include <condition_variable>
 #include "ITaskObserver.h"
-#include "IntegerFactorizationExceptions.h"
-#include "IntegerFactorization.h"
 #include <algorithm>
 #include <iostream>
 
@@ -165,8 +163,9 @@ void ConcurrentTask<T, R>::consumer() {
         while (!producedTasks.empty() && !paused) {
             T taskData = producedTasks.front();
             producedTasks.pop();
-            lockerMutex.unlock();
+            lock.unlock();
             doTask(taskData);
+            lock.lock();
         }
     }
 }
@@ -203,12 +202,3 @@ void ConcurrentTask<T, R>::notifyObservers() {
         item->update(messageForObservers);
     }
 }
-
-
-
-
-
-
-
-
-
