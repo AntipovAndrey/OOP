@@ -141,6 +141,9 @@ void ConcurrentTask<T, R>::producer() {
     T taskData;
     while (input >> taskData) {
         std::unique_lock<std::mutex> lock(lockerMutex);
+        if (terminated) {
+            break;
+        }
         condVar.wait(lock, [this]() { return !paused; });
         producedTasks.push(taskData);
         condVar.notify_all();
@@ -158,7 +161,7 @@ void ConcurrentTask<T, R>::consumer() {
         }
         std::unique_lock<std::mutex> lock(lockerMutex);
         condVar.wait(lock, [this]() {
-            return !producedTasks.empty() && !paused || !finished;
+            return (!producedTasks.empty() && !finished || terminated) && !paused;
         });
         while (!producedTasks.empty() && !paused) {
             T taskData = producedTasks.front();
