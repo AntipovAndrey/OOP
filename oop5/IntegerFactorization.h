@@ -14,6 +14,16 @@ public:
 
     explicit IntegerFactorization(uint64_t number) throw(IllegalArgumentException);
 
+    IntegerFactorization() = default;
+
+    IntegerFactorization(const IntegerFactorization &) = default;
+
+    IntegerFactorization(IntegerFactorization &&) noexcept = default;
+
+    IntegerFactorization &operator=(const IntegerFactorization &) = default;
+
+    IntegerFactorization &operator=(IntegerFactorization &&) noexcept = default;
+
     void calculate();
 
     std::string toString() const throw(NotCalculatedException);
@@ -24,15 +34,13 @@ private:
 
     bool chechFactorization() const throw(NotCalculatedException);
 
-    const uint64_t initialNumber;
+    void assertCalculated() const throw(NotCalculatedException);
+
+    bool isCalculated() const;
+
+    uint64_t initialNumber = 0;
 
     bool calculated = false;
 
     std::vector<uint64_t> factorizedData;
-
-    bool isCalculated() const;
-
-    void assertCalculated() const throw(NotCalculatedException);
 };
-
-

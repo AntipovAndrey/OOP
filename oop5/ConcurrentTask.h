@@ -27,6 +27,10 @@ public:
                                                                                                            std::thread::hardware_concurrency(),
                                                                                                            task) {}
 
+    ConcurrentTask &operator=(const ConcurrentTask &) = delete;
+
+    ConcurrentTask &operator=(ConcurrentTask &&) = delete;
+
     void registerObserver(ITaskObserver &o) override;
 
     void removeObserver(ITaskObserver &o) override;

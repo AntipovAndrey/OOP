@@ -24,6 +24,10 @@ public:
 
     void setThreadsCount(unsigned int count);
 
+    FileStreamFactorization &operator=(FileStreamFactorization &&) = delete;
+
+    FileStreamFactorization &operator=(const FileStreamFactorization &) = delete;
+
 private:
     std::ifstream input;
     std::ofstream output;
