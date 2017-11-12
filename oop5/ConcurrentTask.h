@@ -66,6 +66,7 @@ private:
     std::queue<T> producedTasks;
     std::mutex lockerMutex;
     std::mutex writerMutex;
+    std::mutex flagsMutex;
     std::condition_variable condVar;
 
     volatile bool finished = false;
@@ -82,7 +83,7 @@ private:
 
 template<typename T, typename R>
 bool ConcurrentTask<T, R>::isWorking() {
-    std::lock_guard<std::mutex> lockGuard(lockerMutex);
+    std::lock_guard<std::mutex> lockGuard(flagsMutex);
     if (!(finished && producedTasks.empty() || terminated) || paused) {
         return true;
     }
@@ -97,7 +98,7 @@ bool ConcurrentTask<T, R>::isWorking() {
 
 template<typename T, typename R>
 void ConcurrentTask<T, R>::terminate() {
-    std::lock_guard<std::mutex> lockGuard(lockerMutex);
+    std::lock_guard<std::mutex> lockGuard(flagsMutex);
     terminated = true;
     std::queue<T> empty;
     std::swap(producedTasks, empty);
@@ -106,7 +107,7 @@ void ConcurrentTask<T, R>::terminate() {
 
 template<typename T, typename R>
 void ConcurrentTask<T, R>::continueCalculations() {
-    std::lock_guard<std::mutex> lockGuard(lockerMutex);
+    std::lock_guard<std::mutex> lockGuard(flagsMutex);
     if (paused) {
         paused = false;
         condVar.notify_all();
@@ -116,7 +117,7 @@ void ConcurrentTask<T, R>::continueCalculations() {
 
 template<typename T, typename R>
 void ConcurrentTask<T, R>::pauseCalculations() {
-    std::lock_guard<std::mutex> lockGuard(lockerMutex);
+    std::lock_guard<std::mutex> lockGuard(flagsMutex);
     paused = true;
 }
 
@@ -160,14 +161,14 @@ void ConcurrentTask<T, R>::producer() {
 template<typename T, typename R>
 void ConcurrentTask<T, R>::consumer() {
     while (true) {
-        if (!isWorking()) {
-            return;
-        }
         std::unique_lock<std::mutex> lock(lockerMutex);
+        if (!isWorking()) {
+            break;
+        }
         condVar.wait(lock, [this]() {
-            return (!producedTasks.empty() && !finished || terminated) && !paused;
+            return !producedTasks.empty() && !paused || finished || terminated;
         });
-        while (!producedTasks.empty() && !paused) {
+        while (!producedTasks.empty()) {
             T taskData = producedTasks.front();
             producedTasks.pop();
             lock.unlock();
@@ -175,6 +176,7 @@ void ConcurrentTask<T, R>::consumer() {
             lock.lock();
         }
     }
+    condVar.notify_all();
 }
 
 
