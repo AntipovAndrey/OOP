@@ -1,7 +1,3 @@
-//
-// Created by andrey on 30.10.17.
-//
-
 #pragma once
 
 #include <fstream>
@@ -9,31 +5,34 @@
 #include <mutex>
 #include <thread>
 #include <condition_variable>
-#include "ITaskObserver.h"
+#include "Interfaces/Observer.h"
+#include "Interfaces/Readable.h"
+#include "Interfaces/Writable.h"
 #include <algorithm>
 #include <iostream>
+#include <set>
 
 template<typename T, typename R>
-class ConcurrentTask : ITaskObservable {
+class ConcurrentTask : public Observable<R> {
 public:
-    ConcurrentTask(std::ifstream &input, std::ofstream &output, unsigned int threadCount, std::function<R(T)> task)
-            : input(input),
-              output(output),
+    ConcurrentTask(Readable<T> &input, Writable<R> &output, unsigned int threadCount, std::function<R(T)> task)
+            : reader(input),
+              writer(output),
               taskFunction(task),
               consumersNum(threadCount) {}
 
-    ConcurrentTask(std::ifstream &input, std::ofstream &output, std::function<R(T)> task) : ConcurrentTask(input,
-                                                                                                           output,
-                                                                                                           std::thread::hardware_concurrency(),
-                                                                                                           task) {}
+    ConcurrentTask(Readable<T> &input, Writable<R> &output, std::function<R(T)> task) : ConcurrentTask(input,
+                                                                                                       output,
+                                                                                                       std::thread::hardware_concurrency(),
+                                                                                                       task) {}
 
     ConcurrentTask &operator=(const ConcurrentTask &) = delete;
 
     ConcurrentTask &operator=(ConcurrentTask &&) = delete;
 
-    void registerObserver(ITaskObserver &o) override;
+    void registerObserver(Observer<R> &o) override;
 
-    void removeObserver(ITaskObserver &o) override;
+    void removeObserver(Observer<R> &o) override;
 
     void notifyObservers() override;
 
@@ -49,6 +48,11 @@ public:
 
     bool isWorking();
 
+    virtual ~ConcurrentTask() {
+        reader.stop();
+        writer.stop();
+    };
+
 private:
 
     void producer();
@@ -57,11 +61,12 @@ private:
 
     void doTask(T taskData);
 
-    void writeResult(R result);
+    void writeResult(R &&result);
 
     unsigned int consumersNum;
-    std::ifstream &input;
-    std::ofstream &output;
+
+    Readable<T> &reader;
+    Writable<R> &writer;
 
     std::queue<T> producedTasks;
     std::mutex lockerMutex;
@@ -69,9 +74,13 @@ private:
     std::mutex flagsMutex;
     std::condition_variable condVar;
 
-    volatile bool finished = false;
-    volatile bool paused = false;
-    volatile bool terminated = false;
+    bool finished = false;
+    bool paused = false;
+    bool terminated = false;
+
+    std::set<decltype(std::this_thread::get_id())> idPausedThreads;
+
+    size_t unsolvedTasks = 0;
 
     std::vector<std::thread> pool;
 
@@ -87,8 +96,8 @@ bool ConcurrentTask<T, R>::isWorking() {
     if (!(finished && producedTasks.empty() || terminated) || paused) {
         return true;
     }
-    if (!observersUpdated) {
-        messageForObservers = "Done! Enter anything to continue";
+    if (!observersUpdated && unsolvedTasks == 0) {
+        messageForObservers = "Done";
         notifyObservers();
         observersUpdated = true;
     }
@@ -110,6 +119,9 @@ void ConcurrentTask<T, R>::continueCalculations() {
     std::lock_guard<std::mutex> lockGuard(flagsMutex);
     if (paused) {
         paused = false;
+        idPausedThreads.clear();
+        writer.resume();
+        reader.resume();
         condVar.notify_all();
     }
 }
@@ -144,16 +156,22 @@ void ConcurrentTask<T, R>::join() {
 template<typename T, typename R>
 void ConcurrentTask<T, R>::producer() {
     T taskData;
-    while (input >> taskData) {
+    while (reader.hasNext()) {
+        taskData = reader.next();
         std::unique_lock<std::mutex> lock(lockerMutex);
         if (terminated) {
             break;
         }
-        condVar.wait(lock, [this]() { return !paused; });
+        while (paused) {
+            reader.pause();
+            condVar.wait(lock);
+        }
         producedTasks.push(taskData);
+        unsolvedTasks++;
         condVar.notify_all();
     }
     finished = true;
+    reader.stop();
     condVar.notify_all();
 }
 
@@ -165,15 +183,23 @@ void ConcurrentTask<T, R>::consumer() {
         if (!isWorking()) {
             break;
         }
+        while (paused) {
+            idPausedThreads.insert(std::this_thread::get_id());
+            if (idPausedThreads.size() == consumersNum) {
+                writer.pause();
+            }
+            condVar.wait(lock);
+        }
         condVar.wait(lock, [this]() {
-            return !producedTasks.empty() && !paused || finished || terminated;
+            return !producedTasks.empty() && !paused || finished;
         });
-        while (!producedTasks.empty()) {
+        while (!producedTasks.empty() && !paused) {
             T taskData = producedTasks.front();
             producedTasks.pop();
             lock.unlock();
             doTask(taskData);
             lock.lock();
+            unsolvedTasks--;
         }
     }
     condVar.notify_all();
@@ -182,32 +208,31 @@ void ConcurrentTask<T, R>::consumer() {
 
 template<typename T, typename R>
 void ConcurrentTask<T, R>::doTask(T taskData) {
-    R result = taskFunction(taskData);
-    writeResult(result);
+    writeResult(taskFunction(taskData));
 }
 
 
 template<typename T, typename R>
-void ConcurrentTask<T, R>::writeResult(R result) {
+void ConcurrentTask<T, R>::writeResult(R &&result) {
     std::lock_guard<std::mutex> guard(writerMutex);
-    output << result << std::endl;
-    output.flush();
+    writer.store(std::forward<R>(result));
 }
 
 
 template<typename T, typename R>
-void ConcurrentTask<T, R>::removeObserver(ITaskObserver &o) {
-    observers.erase(std::remove(std::begin(observers), std::end(observers), &o), observers.end());
+void ConcurrentTask<T, R>::removeObserver(Observer<R> &o) {
+    this->observers.erase(std::remove(std::begin(this->observers), std::end(this->observers), &o),
+                          this->observers.end());
 }
 
 template<typename T, typename R>
-void ConcurrentTask<T, R>::registerObserver(ITaskObserver &o) {
-    observers.push_back(&o);
+void ConcurrentTask<T, R>::registerObserver(Observer<R> &o) {
+    this->observers.push_back(&o);
 }
 
 template<typename T, typename R>
 void ConcurrentTask<T, R>::notifyObservers() {
-    for (auto item : observers) {
+    for (auto item : this->observers) {
         item->update(messageForObservers);
     }
 }

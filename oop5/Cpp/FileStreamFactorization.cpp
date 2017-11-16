@@ -3,16 +3,18 @@
 //
 
 
-#include "FileStreamFactorization.h"
+#include "../Headers/FileStreamFactorization.h"
 
 
 FileStreamFactorization::FileStreamFactorization(const std::string &inputFilename, const std::string &outputFilename)
         : inputFilename(inputFilename), outputFilename(outputFilename) {}
 
 void FileStreamFactorization::process() {
-    initialiseStreams();
 
-    ConcurrentTask<uint64_t, std::string> task(input, output, threadsNumber, [](uint64_t number) -> std::string {
+    FileReader<uint64_t> reader(inputFilename);
+    FileWriter<std::string> writer(outputFilename);
+
+    ConcurrentTask<uint64_t, std::string> task(reader, writer, threadsNumber, [](uint64_t number) {
         try {
             IntegerFactorization factorization(number);
             factorization.calculate();
@@ -31,18 +33,6 @@ void FileStreamFactorization::process() {
     }
 
     task.join();
-
-    closeStreams();
-}
-
-void FileStreamFactorization::closeStreams() {
-    input.close();
-    output.close();
-}
-
-void FileStreamFactorization::initialiseStreams() {
-    input = std::ifstream(inputFilename);
-    output = std::ofstream(outputFilename);
 }
 
 void FileStreamFactorization::enableDialog(bool enabled) {
@@ -76,11 +66,6 @@ void FileStreamFactorization::setThreadsCount(unsigned int count) {
 
 void FileStreamFactorization::update(std::string message) {
     if (dialogEnabled) {
-        std::cout << message << std::endl;
+        std::cout << "Done! Enter anything to continue" << std::endl;
     }
 }
-
-/** some large numbers here
-9223372036854775807
-9223372036854775807
- */

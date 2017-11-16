@@ -5,7 +5,7 @@
 #include <cmath>
 #include <iostream>
 #include <algorithm>
-#include "IntegerFactorization.h"
+#include "../Headers/IntegerFactorization.h"
 
 IntegerFactorization::IntegerFactorization(uint64_t number) throw(IllegalArgumentException) : initialNumber(number) {
     if (number < 2)
@@ -53,7 +53,7 @@ void IntegerFactorization::printFactorizedData() const throw(NotCalculatedExcept
     std::cout << toString() << std::endl;
 }
 
-bool IntegerFactorization::chechFactorization() const throw(NotCalculatedException) {
+bool IntegerFactorization::checkFactorization() const throw(NotCalculatedException) {
 
     uint64_t result = 1;
 

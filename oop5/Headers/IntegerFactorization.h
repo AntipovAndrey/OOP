@@ -32,7 +32,7 @@ public:
 
 private:
 
-    bool chechFactorization() const throw(NotCalculatedException);
+    bool checkFactorization() const throw(NotCalculatedException);
 
     void assertCalculated() const throw(NotCalculatedException);
 

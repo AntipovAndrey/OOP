@@ -1,10 +1,8 @@
-
+#include <fstream>
 #include <iostream>
-#include "FileStreamFactorization.h"
+#include "Headers/FileStreamFactorization.h"
 
 int main() {
-
-
     FileStreamFactorization factorization("test.txt", "out.txt");
 
     std::cout
