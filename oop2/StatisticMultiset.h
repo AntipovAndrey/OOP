@@ -17,6 +17,20 @@
 template<typename T>
 class StatisticMultiset {
 public:
+    StatisticMultiset() = default;
+
+    StatisticMultiset(const std::initializer_list<T> &list) {
+        addNum(list);
+    }
+
+    StatisticMultiset(const StatisticMultiset &) = default;
+
+    StatisticMultiset &operator=(const StatisticMultiset &) = default;
+
+    StatisticMultiset (StatisticMultiset &&) = default;
+
+    StatisticMultiset &operator=(StatisticMultiset &&) = default;
+
     void addNum(const T &value) {
         if (data.empty()) {
             maxValue = value;
@@ -32,21 +46,10 @@ public:
         avgIsOutdated = true;
     }
 
-    void addNum(const std::multiset<T> &numbers) {
-        for (auto &it : numbers) {
-            addNum(it);
-        }
-    }
-
-    void addNum(const std::vector<T> &numbers) {
-        for (auto &it : numbers) {
-            addNum(it);
-        }
-    }
-
-    void addNum(const std::list<T> &numbers) {
-        for (auto &it : numbers) {
-            addNum(it);
+    template<template<class...> class Container>
+    void addNum(const Container<T> &numbers) {
+        for (const auto item : numbers) {
+            addNum(item);
         }
     }
 
@@ -56,7 +59,7 @@ public:
         }
     }
 
-    void addNumsFromFile(const char *fileName) {
+    void addNumsFromFile(const std::string &fileName) {
         std::fstream file;
         file.open(fileName);
         if (!file.good()) return;
@@ -66,11 +69,11 @@ public:
         }
     }
 
-    T getMax() const {
+    T getMax() const noexcept {
         return maxValue;
     }
 
-    T getMin() const {
+    T getMin() const noexcept {
         return minValue;
     }
 
@@ -145,7 +148,7 @@ private:
         }
     }
 
-    void updateCachesAfterAdd(const T &value) {
+    void updateCachesAfterAdd(const T &value) const {
         for (auto &it : cacheUnder) {
             if (it.first > value && cacheUnder.count(it.first)) {
                 cacheUnder[it.first] = cacheUnder[it.first] + 1;
