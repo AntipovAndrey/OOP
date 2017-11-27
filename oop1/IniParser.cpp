@@ -8,7 +8,7 @@
 
 using namespace std;
 
-void IniParser::initialize(string const &fileName) throw(IOException) {
+void IniParser::initialize(string const &fileName) {
     fstream file;
     file.open(fileName);
     if (!file.good()) throw IOException(fileName);
@@ -38,18 +38,18 @@ string IniParser::deleteComments(string &line) const {
     return line;
 }
 
-bool IniParser::lineIsEmpty(string &line) const {
-    short minLineLength = 3;
+bool IniParser::lineIsEmpty(const string &line) const {
+    size_t minLineLength = 3;
     return line.length() <= minLineLength;
 }
 
-bool IniParser::isHaveSection(string const &sectionName) const throw(ConfigNotInitialisedException) {
+bool IniParser::isHaveSection(string const &sectionName) const {
     if (!isInitialised) throw ConfigNotInitialisedException();
     return parsedData.count(sectionName) != 0;
 }
 
 bool IniParser::isHaveParameter(string const &sectionName,
-                                string const &parameterName) const throw(ConfigNotInitialisedException, SectionNotFoundException) {
+                                string const &parameterName) const {
     if (!isInitialised) throw ConfigNotInitialisedException();
     if (!isHaveSection(sectionName)) throw SectionNotFoundException(sectionName);
     return parsedData.at(sectionName).count(parameterName) != 0;
@@ -57,7 +57,7 @@ bool IniParser::isHaveParameter(string const &sectionName,
 
 template<>
 std::string IniParser::getValue<string>(string const &sectionName,
-                                        string const &parameterName) const throw(IniException) {
+                                        string const &parameterName) const {
     assertExistence(sectionName, parameterName);
     return parsedData.at(sectionName).at(parameterName);
 }
@@ -65,14 +65,14 @@ std::string IniParser::getValue<string>(string const &sectionName,
 
 template<>
 int IniParser::getValue<int>(string const &sectionName,
-                             string const &parameterName) const throw(IniException) {
+                             string const &parameterName) const {
     assertExistence(sectionName, parameterName);
     return stoi(parsedData.at(sectionName).at(parameterName));
 }
 
 template<>
 double IniParser::getValue<double>(string const &sectionName,
-                                   string const &parameterName) const throw(IniException) {
+                                   string const &parameterName) const {
     assertExistence(sectionName, parameterName);
     return stod(parsedData.at(sectionName).at(parameterName));
 }
@@ -89,7 +89,7 @@ const string IniParser::toString() const {
     return toReturn;
 }
 
-bool IniParser::lineIsSection(string &line) const {
+bool IniParser::lineIsSection(const string &line) const {
     return line.find('[') != string::npos;
 }
 
@@ -101,11 +101,11 @@ pair<string, string> IniParser::extractParameter(string &line) const {
     line.erase(remove(line.begin(), line.end(), ' '), line.end());
     string param = line.substr(0, line.find('='));
     string value = line.substr(line.find('=') + 1);
-    return make_pair<string &, string &>(param, value);
+    return {param, value};
 }
 
 void IniParser::assertExistence(const std::string &sectionName,
-                                const std::string &parameterName) const throw(SectionNotFoundException, NoSuchParameterException) {
+                                const std::string &parameterName) const {
     if (!isHaveSection(sectionName)) {
         throw SectionNotFoundException(sectionName);
     }
