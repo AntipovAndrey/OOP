@@ -11,15 +11,15 @@
 class Wav {
 public:
 
-    explicit Wav(const std::string &fileName) throw(WavException);
+    explicit Wav(const std::string &fileName);
 
-    void applyReverberation(double delay, float decay) throw(BadParamsException, ReverberationException);
+    void applyReverberation(double delay, float decay);
 
-    void applyReverberationByChannel(double delay, float decay, int channel) throw(BadParamsException, ReverberationException);
+    void applyReverberationByChannel(double delay, float decay, int channel);
 
-    void makeMono() throw(BadParamsException);
+    void makeMono() ;
 
-    void makeWavFile(const std::string &fileName) throw(WavException);
+    void makeWavFile(const std::string &fileName) ;
 
     std::string getDescription() const;
 
@@ -41,14 +41,14 @@ private:
 
     void initHeader();
 
-    void checkHeader(long fileSize) const throw(WavHeaderException);
+    void checkHeader(long fileSize) const ;
 
     void fillHeader(int channelsCount, int bitsPerSample, int sampleRate,
-                    int samplesCountPerChannel) throw(WavException);
+                    int samplesCountPerChannel);
 
     void updateHeader();
 
-    void extractDataInt16(std::ifstream &file) throw(WavException);
+    void extractDataInt16(std::ifstream &file);
 
     std::vector<std::vector<short>> channelsData;
 

@@ -9,28 +9,27 @@
 #include "Wav.h"
 #include <cmath>
 
-using namespace std;
 
-Wav::Wav(const string &fileName) throw(WavException) {
+Wav::Wav(const std::string &fileName) {
 
     clearHeader(); // Fill header with zeroes.
 
     wavFileName = fileName;
 
-    ifstream file(fileName, ifstream::binary);
+    std::ifstream file(fileName, std::ifstream::binary);
     if (!file.good()) {
         throw IOException(wavFileName);
     }
 
-    file.seekg(0, ios::beg);
-    file.read((char *) (&header), sizeof(WavHeader));
+    file.seekg(0, std::ios::beg);
+    file.read(reinterpret_cast<char *>(&header), sizeof(WavHeader));
 
     if (file.gcount() != sizeof(WavHeader)) {
         // can't read header, because the file is too small.
         throw BadFormatException(wavFileName);
     }
 
-    file.seekg(0, ios::end);
+    file.seekg(0, std::ios::end);
 
     checkHeader(file.tellg());
 
@@ -41,7 +40,7 @@ void Wav::clearHeader() {
     memset(&header, 0, sizeof(WavHeader));
 }
 
-void Wav::checkHeader(long fileSize) const throw(WavHeaderException) {
+void Wav::checkHeader(long fileSize) const {
     // Go to Wav.h for details
 
     if (header.chunkId[0] != 'R' ||
@@ -97,33 +96,33 @@ void Wav::checkHeader(long fileSize) const throw(WavHeaderException) {
     }
 }
 
-string Wav::getDescription() const {
-    string toReturn;
-    toReturn = "audioFormat     " + to_string(header.audioFormat) + "\n"
-               + "numChannels     " + to_string(header.numChannels) + "\n"
-               + "sampleRate      " + to_string(header.sampleRate) + "\n"
-               + "bitsPerSample   " + to_string(header.bitsPerSample) + "\n"
-               + "byteRate        " + to_string(header.byteRate) + "\n"
-               + "blockAlign      " + to_string(header.blockAlign) + "\n"
-               + "chunkSize       " + to_string(header.chunkSize) + "\n"
-               + "subchunk1Size   " + to_string(header.subchunk1Size) + "\n"
-               + "subchunk2Size   " + to_string(header.subchunk2Size) + "\n";
+std::string Wav::getDescription() const {
+    std::string toReturn;
+    toReturn = "audioFormat     " + std::to_string(header.audioFormat) + "\n"
+               + "numChannels     " + std::to_string(header.numChannels) + "\n"
+               + "sampleRate      " + std::to_string(header.sampleRate) + "\n"
+               + "bitsPerSample   " + std::to_string(header.bitsPerSample) + "\n"
+               + "byteRate        " + std::to_string(header.byteRate) + "\n"
+               + "blockAlign      " + std::to_string(header.blockAlign) + "\n"
+               + "chunkSize       " + std::to_string(header.chunkSize) + "\n"
+               + "subchunk1Size   " + std::to_string(header.subchunk1Size) + "\n"
+               + "subchunk2Size   " + std::to_string(header.subchunk2Size) + "\n";
     return toReturn;
 }
 
-void Wav::extractDataInt16(ifstream &file) throw(WavException) {
+void Wav::extractDataInt16(std::ifstream &file) {
     if (header.bitsPerSample != 16) {
         // Only 16-bit samples is supported.
         throw UnsupportedFormatException(wavFileName);
     }
 
-    file.seekg(HEADER_SIZE, ios::beg);  // Seek to the begin of PCM data.
+    file.seekg(HEADER_SIZE, std::ios::beg);  // Seek to the begin of PCM data.
 
     uint16_t channelsCount = header.numChannels;
     unsigned int samplesPerChannel = (header.subchunk2Size / sizeof(uint16_t)) / channelsCount;
 
-    // 1. Reading all PCM data from file to a single vector.
-    vector<short> allChannels;
+    // 1. Reading all PCM data from file to a single std::vector.
+    std::vector<short> allChannels;
     allChannels.resize(channelsCount * samplesPerChannel);
     file.read((char *) allChannels.data(), header.subchunk2Size);
 
@@ -132,14 +131,14 @@ void Wav::extractDataInt16(ifstream &file) throw(WavException) {
     }
     file.close();
 
-    // 2. Put all channels to its own vector.
+    // 2. Put all channels to its own std::vector.
     channelsData.resize(channelsCount);
     for (auto &ch : channelsData) {
         ch.resize(samplesPerChannel);
     }
 
     for (int ch = 0; ch < channelsCount; ch++) {
-        vector<short> &channel = channelsData[ch];
+        std::vector<short> &channel = channelsData[ch];
         for (size_t i = 0; i < samplesPerChannel; i++) {
             channel[i] = allChannels[channelsCount * i + ch];
         }
@@ -174,7 +173,7 @@ void Wav::initHeader() {
     header.bitsPerSample = 16;
 }
 
-void Wav::makeWavFile(const string &fileName) throw(WavException) {
+void Wav::makeWavFile(const std::string &fileName) {
 
     if (getChannelsCount() < 1) {
         throw BadParamsException(wavFileName);
@@ -190,20 +189,20 @@ void Wav::makeWavFile(const string &fileName) throw(WavException) {
     int bitsPerSample = 16;
     fillHeader(getChannelsCount(), bitsPerSample, header.sampleRate, getSamplesCountPerChannel());
 
-    vector<short> allChannels;
+    std::vector<short> allChannels;
     allChannels.resize(getChannelsCount() * getSamplesCountPerChannel());
 
     for (int ch = 0; ch < getChannelsCount(); ch++) {
-        const vector<short> &channelData = channelsData[ch];
+        const std::vector<short> &channelData = channelsData[ch];
         for (size_t i = 0; i < getSamplesCountPerChannel(); i++) {
             allChannels[getChannelsCount() * i + ch] = channelData[i];
         }
     }
 
-    ofstream output(fileName, ofstream::binary | ofstream::out);
+    std::ofstream output(fileName, std::ofstream::binary | std::ofstream::out);
 
-    output.write((char *) (&header), sizeof(WavHeader));
-    output.write((char *) allChannels.data(), allChannels.size() * sizeof(short));
+    output.write(reinterpret_cast<char *>(&header), sizeof(WavHeader));
+    output.write(reinterpret_cast<char *>(allChannels.data()), allChannels.size() * sizeof(short));
 
 
     if (output.fail()) {
@@ -214,7 +213,7 @@ void Wav::makeWavFile(const string &fileName) throw(WavException) {
 }
 
 void Wav::fillHeader(int channelsCount, int bitsPerSample, int sampleRate,
-                     int samplesCountPerChannel) throw(WavException) {
+                     int samplesCountPerChannel) {
 
     if (bitsPerSample != 16) {
         throw UnsupportedFormatException(wavFileName);
@@ -239,7 +238,7 @@ void Wav::fillHeader(int channelsCount, int bitsPerSample, int sampleRate,
 }
 
 
-void Wav::makeMono() throw(BadParamsException) {
+void Wav::makeMono() {
 
     if (getChannelsCount() != 2) {
         throw BadParamsException(wavFileName);
@@ -252,7 +251,7 @@ void Wav::makeMono() throw(BadParamsException) {
         }
     }
 
-    vector<short> mono = channelsData[0];
+    std::vector<short> mono = channelsData[0];
     mono.resize(1);
     mono.resize(getSamplesCountPerChannel());
 
@@ -299,13 +298,14 @@ void Wav::updateHeader() {
                getSamplesCountPerChannel());
 }
 
-void Wav::applyReverberation(double delay, float decay) throw(BadParamsException, ReverberationException) {
+void Wav::applyReverberation(double delay, float decay) {
     for (int i = 0; i < getChannelsCount(); ++i) {
         applyReverberationByChannel(delay, decay, i);
     }
 }
 
-void Wav::applyReverberationByChannel(double delay, float decay, int channel) throw(BadParamsException, ReverberationException) {
+void Wav::applyReverberationByChannel(double delay, float decay,
+                                      int channel) {
 
     int channelAsIndex = channel - 1;
 
@@ -315,7 +315,8 @@ void Wav::applyReverberationByChannel(double delay, float decay, int channel) th
 
     if (channelAsIndex < 0 || channelAsIndex > getChannelsCount()) {
         throw ReverberationException(
-                "bad channel number : " + to_string(channel) + ". There is only " + to_string(getChannelsCount()));
+                "bad channel number : " + std::to_string(channel) + ". There is only " +
+                std::to_string(getChannelsCount()));
     }
 
 
@@ -328,7 +329,7 @@ void Wav::applyReverberationByChannel(double delay, float decay, int channel) th
 
     auto delaySamples = static_cast<uint32_t>(delay * header.sampleRate);
 
-    vector<float> tmp;
+    std::vector<float> tmp;
     tmp.resize(channelsData[channelAsIndex].size());
 
     // Convert signal from short to float
