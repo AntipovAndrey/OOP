@@ -356,7 +356,7 @@ namespace andrey {
             auto distance = std::distance(cbegin(), pos);
             expandIfNecessary();
             shiftArray(distance, 1);
-            data_[distance] = value;
+            alloc_.construct(data_ + distance, value);
             size_++;
             return {data_ + distance};
         }
@@ -365,7 +365,7 @@ namespace andrey {
             auto distance = std::distance(cbegin(), pos);
             expandIfNecessary();
             shiftArray(distance, 1);
-            data_[distance] = std::move(value);
+            alloc_.construct(data_ + distance, std::move(value));
             size_++;
             return {data_ + distance};
         }
@@ -377,7 +377,7 @@ namespace andrey {
             size_ += count;
             auto offset = distance + count;
             for (size_type i = distance; i < offset; ++i) {
-                data_[i] = value;
+                alloc_.construct(data_ + i, value);
             }
             return {data_ + distance};
         }
@@ -395,7 +395,8 @@ namespace andrey {
             size_ += count;
             auto offset = distance + count;
             for (size_type i = distance; i < offset; ++i) {
-                data_[i] = *first++;
+                alloc_.construct(data_ + i, *first);
+                first++;
             }
             std::cout;
             return {data_ + distance};
@@ -410,7 +411,7 @@ namespace andrey {
             auto distance = std::distance(cbegin(), pos);
             expandIfNecessary();
             shiftArray(distance, 1);
-            data_[distance] = value_type(std::forward<Args>(args)...);
+            alloc_.construct(data_ + distance, std::forward<Args>(args)...);
             size_++;
             return {data_ + distance};
         }
