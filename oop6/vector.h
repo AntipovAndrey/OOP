@@ -4,6 +4,7 @@
 #include <bits/allocator.h>
 #include <memory>
 #include <limits>
+#include <cstring>
 
 
 namespace andrey {
@@ -11,9 +12,6 @@ namespace andrey {
     template<class Type, class Allocator = std::allocator<Type>>
     class Vector {
 
-        /*
-        *  Member-types
-        */
     public:
         using value_type = Type;
         using allocator_type = Allocator;
@@ -225,13 +223,19 @@ namespace andrey {
 
         void push_back(const value_type &value) {
             expandIfNecessary();
-            data_[size_++] = value;
+            alloc_.construct(data_ + size_, value);
+            size_++;
+        }
+
+        void push_back(value_type &&value) {
+            emplace_back(std::move(value));
         }
 
         template<class... Types>
         void emplace_back(Types &&...args) {
             expandIfNecessary();
-            data_[size_++] = value_type(std::forward<Types>(args)...);
+            alloc_.construct(data_ + size_, std::forward<Types>(args)...);
+            size_++;
         }
 
 
@@ -247,8 +251,7 @@ namespace andrey {
             if (capacity_ < n) {
                 const size_type amountOfReserve = n - size_;
                 value_type *buffer = alloc_.allocate(capacity_ + n);
-                std::move(data_, data_ + size_, buffer);
-                deleter(data_, data_ + size_);
+                memcpy(buffer, data_, size_ * sizeof(value_type));
                 alloc_.deallocate(data_, size_);
                 data_ = buffer;
                 capacity_ += amountOfReserve;
@@ -473,8 +476,7 @@ namespace andrey {
             if (size_ == capacity_) {
                 capacity_ *= sizeMultiplier_;
                 value_type *buffer = alloc_.allocate(capacity_);
-                std::move(data_, data_ + size_, buffer);
-                deleter(data_, data_ + size_);
+                memcpy(buffer, data_, size_ * sizeof(value_type));
                 alloc_.deallocate(data_, size_);
                 data_ = buffer;
             }
@@ -482,7 +484,7 @@ namespace andrey {
 
         void shiftArray(size_type begIndex, size_type n) {
             for (size_type i = size_ + n; i >= begIndex + n; --i) {
-                data_[i] = data_[i - n];
+                memcpy(data_ + i - n, data_ + i, sizeof(value_type));
             }
         }
 
