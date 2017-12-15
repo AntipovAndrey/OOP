@@ -146,19 +146,28 @@ namespace andrey {
         }
 
         template<class InputIterator,
-                class SFINAE = typename std::enable_if<!std::is_integral<InputIterator>::value
-                                                       &&
-                                                       std::is_base_of<std::input_iterator_tag,
-                                                               typename std::iterator_traits<InputIterator>::iterator_category>::value>::type>
+                class SFINAE =
+                typename std::enable_if<!std::is_integral<InputIterator>::value
+                                        &&
+                                        std::is_base_of<
+                                                std::input_iterator_tag,
+                                                typename std::iterator_traits<InputIterator>::iterator_category>
+                                        ::value
+                >::type
+        >
         Vector(InputIterator first, InputIterator last) : size_(
                 static_cast<size_type>(std::distance(first, last))), capacity_(size_) {
             data_ = alloc_.allocate(capacity_);
-            std::copy(first, last, data_);
+            for (size_type i = 0; i < size_; ++i) {
+                alloc_.construct(data_ + i, *first++);
+            }
         }
 
         Vector(const Vector &right) : size_(right.size_), capacity_(right.capacity_) {
             data_ = alloc_.allocate(capacity_);
-            std::copy(right.data_, right.data_ + size_, data_);
+            for (size_type i = 0; i < size_; ++i) {
+                alloc_.construct(data_ + i, right.data_[i]);
+            }
         }
 
         Vector(Vector &&other) noexcept : data_(other.data_),
@@ -182,7 +191,9 @@ namespace andrey {
             size_ = rhs.size_;
             capacity_ = rhs.capacity_;
             data_ = alloc_.allocate(capacity_);
-            std::copy(rhs.data_, rhs.data_ + size_, data_);
+            for (size_type i = 0; i < size_; ++i) {
+                alloc_.construct(data_ + i, rhs.data_[i]);
+            }
         }
 
         Vector &operator=(Vector &&rhs) noexcept {
@@ -240,22 +251,27 @@ namespace andrey {
 
 
         void shrink_to_fit() {
-            if (capacity_ != size_) {
-                deleter(data_ + size_, data_ + (capacity_ - size_));
-                alloc_.deallocate(data_ + size_, capacity_ - size_);
-                capacity_ = size_;
+            if (capacity_ == size_) {
+                return;
             }
+
+            deleter(data_ + size_, data_ + (capacity_ - size_));
+            alloc_.deallocate(data_ + size_, capacity_ - size_);
+            capacity_ = size_;
+
         }
 
         void reserve(size_type n) {
-            if (capacity_ < n) {
-                const size_type amountOfReserve = n - size_;
-                value_type *buffer = alloc_.allocate(capacity_ + n);
-                memcpy(buffer, data_, size_ * sizeof(value_type));
-                alloc_.deallocate(data_, size_);
-                data_ = buffer;
-                capacity_ += amountOfReserve;
+            if (capacity_ > n) {
+                return;
             }
+            const size_type amountOfReserve = n - size_;
+            value_type *buffer = alloc_.allocate(capacity_ + n);
+            memcpy(buffer, data_, size_ * sizeof(value_type));
+            alloc_.deallocate(data_, size_);
+            data_ = buffer;
+            capacity_ += amountOfReserve;
+
         }
 
         reference at(size_type position) {
@@ -383,10 +399,15 @@ namespace andrey {
         }
 
         template<class InputIterator,
-                class SFINAE = typename std::enable_if<!std::is_integral<InputIterator>::value
-                                                       &&
-                                                       std::is_base_of<std::input_iterator_tag,
-                                                               typename std::iterator_traits<InputIterator>::iterator_category>::value>::type>
+                class SFINAE = typename
+                std::enable_if<!std::is_integral<InputIterator>::value
+                               &&
+                               std::is_base_of<
+                                       std::input_iterator_tag,
+                                       typename std::iterator_traits<InputIterator>::iterator_category>
+                               ::value
+                >::type
+        >
         iterator insert(const_iterator pos, InputIterator first, InputIterator last) {
             auto distance = std::distance(cbegin(), pos);
             auto count = std::distance(first, last);;
@@ -464,11 +485,17 @@ namespace andrey {
             return rbegin();
         }
 
+        void swap(Vector &other) {
+            std::swap(size_, other.size_);
+            std::swap(capacity_, other.capacity_);
+            std::swap(data_, other.data_);
+        }
+
     private:
 
         void deleter(value_type *from, value_type *to) {
             while (from != to) {
-                from->~value_type();
+                alloc_.destroy(from);
                 from++;
             }
         }
@@ -498,4 +525,10 @@ namespace andrey {
 
     }; // end Vector
 
+    using std::swap;
+
+    template<class Type, class Allocator>
+    void swap(Vector<Type, Allocator> &lhs, Vector<Type, Allocator> &rhs) {
+        lhs.swap(rhs);
+    }
 } // end andrey
