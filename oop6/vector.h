@@ -183,31 +183,32 @@ namespace andrey {
                                                                            initializerList.end()) {}
 
         Vector &operator=(const Vector &rhs) {
-            if (this == &rhs) {
-                return *this;
+            if (this != &rhs) {
+                deleter(data_, data_ + size_);
+                alloc_.deallocate(data_, size_);
+                size_ = rhs.size_;
+                capacity_ = rhs.capacity_;
+                data_ = alloc_.allocate(capacity_);
+                for (size_type i = 0; i < size_; ++i) {
+                    alloc_.construct(data_ + i, rhs.data_[i]);
+                }
             }
-            deleter(data_, data_ + size_);
-            alloc_.deallocate(data_, size_);
-            size_ = rhs.size_;
-            capacity_ = rhs.capacity_;
-            data_ = alloc_.allocate(capacity_);
-            for (size_type i = 0; i < size_; ++i) {
-                alloc_.construct(data_ + i, rhs.data_[i]);
-            }
+            return *this;
         }
 
         Vector &operator=(Vector &&rhs) noexcept {
-            if (this == &rhs) {
-                return *this;
+            if (this != &rhs) {
+
+                deleter(data_, data_ + size_);
+                alloc_.deallocate(data_, size_);
+                data_ = rhs.data_;
+                size_ = rhs.size_;
+                capacity_ = rhs.capacity_;
+                rhs.data_ = nullptr;
+                rhs.size_ = 0;
+                rhs.capacity_ = 0;
             }
-            deleter(data_, data_ + size_);
-            alloc_.deallocate(data_, size_);
-            data_ = rhs.data_;
-            size_ = rhs.size_;
-            capacity_ = rhs.capacity_;
-            rhs.data_ = nullptr;
-            rhs.size_ = 0;
-            rhs.capacity_ = 0;
+            return *this;
         }
 
 
@@ -358,7 +359,7 @@ namespace andrey {
         }
 
         void assign(std::initializer_list<value_type> initializerList) {
-            assign(2, 2);
+            assign(initializerList.begin(), initializerList.end());
         }
 
         template<class Iterator>
@@ -419,7 +420,6 @@ namespace andrey {
                 alloc_.construct(data_ + i, *first);
                 first++;
             }
-            std::cout;
             return {data_ + distance};
         }
 
