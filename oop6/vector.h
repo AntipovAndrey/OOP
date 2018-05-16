@@ -255,7 +255,6 @@ namespace andrey {
             if (capacity_ == size_) {
                 return;
             }
-
             deleter(data_ + size_, data_ + (capacity_ - size_));
             alloc_.deallocate(data_ + size_, capacity_ - size_);
             capacity_ = size_;
@@ -272,7 +271,6 @@ namespace andrey {
             alloc_.deallocate(data_, size_);
             data_ = buffer;
             capacity_ += amountOfReserve;
-
         }
 
         reference at(size_type position) {
@@ -511,8 +509,8 @@ namespace andrey {
         }
 
         void shiftArray(size_type begIndex, size_type n) {
-            for (size_type i = size_ + n; i >= begIndex + n; --i) {
-                memcpy(data_ + i - n, data_ + i, sizeof(value_type));
+            for (size_type i = begIndex; i <= size_; ++i) {
+                memcpy(data_ + i + n, data_ + i, sizeof(value_type));
             }
         }
 
