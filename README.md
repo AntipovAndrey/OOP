@@ -19,7 +19,7 @@ or ```main_windows.cpp``` using VS compiler on Windos <br />
   **Params:** </h2><br />
 -f file_name - source file <br />
 -i file_name - outpit INI file <br />
--р file_name - output .h file <br />
+-h file_name - output .h file <br />
 
 
 # OOP - Лабораторные работы по ООП за третий семестр, ИС ИТиП ИТМО
@@ -45,6 +45,6 @@ or ```main_windows.cpp``` using VS compiler on Windos <br />
   **Параметры:** </h2><br />
 -f имя_файла - название файла для обработки <br />
 -i имя_файла - название выходного INI файла <br />
--р имя_файла - название выходного .h файла <br />
-Если -i, -p не указан, то имя выходного файла будет сформировано из 
+-h имя_файла - название выходного .h файла <br />
+Если -i, -h не указан, то имя выходного файла будет сформировано из 
 имени входного.
